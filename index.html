@@ -8,18 +8,15 @@
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center; background: #0a0a0a; color: white; padding: 20px; margin: 0; }
         h2 { letter-spacing: 2px; text-transform: uppercase; color: #fff; margin-top: 10px; }
         
-        /* Stats Box */
         .stats { margin: 15px 0; padding: 20px; background: #151515; border: 1px solid #222; border-radius: 15px; display: inline-block; min-width: 260px; }
         .total-label { color: #888; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
         .total-amount { font-size: 3.2rem; color: #2ed573; font-weight: bold; margin: 5px 0; transition: transform 0.2s ease; }
         .pulse { transform: scale(1.1); }
 
-        /* Wheel Styling */
         #wheel-container { position: relative; width: 320px; height: 320px; margin: 20px auto; }
         #canvas { width: 100%; height: 100%; border-radius: 50%; border: 6px solid #222; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); box-shadow: 0 0 50px rgba(0,0,0,0.8); }
         #pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 35px solid #ff4757; z-index: 10; }
         
-        /* Buttons */
         #spin-btn { background: #ffa502; color: #000; border: none; padding: 18px; font-size: 1.1rem; border-radius: 40px; cursor: pointer; font-weight: bold; width: 100%; max-width: 320px; margin-top: 10px; box-shadow: 0 4px 15px rgba(255,165,2,0.3); }
         #spin-btn:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; }
         
@@ -28,7 +25,7 @@
         .venmo { background: #008CFF; box-shadow: 0 4px 12px rgba(0,140,255,0.3); }
         .crypto { background: #2775ca; border: 1px solid #4a90e2; box-shadow: 0 4px 12px rgba(39,117,202,0.3); }
         
-        .copy-addr { background: transparent; font-size: 0.75rem; padding: 10px; border: 1px dashed #444; color: #777; cursor: pointer; border-radius: 10px; margin-top: 5px; width: 280px; }
+        .copy-addr { background: transparent; font-size: 0.75rem; padding: 10px; border: 1px dashed #444; color: #777; cursor: pointer; border-radius: 10px; margin-top: 15px; width: 280px; }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -52,9 +49,9 @@
     <div id="pay-section" class="pay-section">
         <a id="venmo-link" class="pay-btn venmo" href="#">SETTLE VIA VENMO</a>
         
-        <a id="crypto-link" class="pay-btn crypto" href="#">SETTLE VIA USDC (BASE)</a>
+        <a id="crypto-link" class="pay-btn crypto" href="#">SETTLE VIA CRYPTO WALLET</a>
         
-        <button class="copy-addr" onclick="copyAddress()">Copy Wallet Address (USDC Base)</button>
+        <button class="copy-addr" onclick="copyAddress()">Copy USDC Base Address</button>
     </div>
 
 <script>
@@ -103,14 +100,13 @@
         paySection.style.display = 'none';
         display.classList.remove('pulse');
 
-        const spins = 2160; // 6 full rotations
+        const spins = 2160; 
         const extraDegrees = Math.floor(Math.random() * 360);
         currentRotation += (spins + extraDegrees); 
         
         canvas.style.transform = `rotate(${currentRotation}deg)`;
 
         setTimeout(() => {
-            // Precise calculation for the top pointer (270 degrees)
             const netRotation = currentRotation % 360;
             const segmentAngle = 360 / prizes.length;
             const prizeIndex = Math.floor((360 - netRotation + 270) % 360 / segmentAngle);
@@ -120,12 +116,12 @@
             display.innerText = `$${totalContribution}`;
             display.classList.add('pulse');
 
-            // 1. VENMO LINK (US Only)
+            // 1. VENMO
             const vNote = encodeURIComponent("small business support");
             document.getElementById('venmo-link').href = `venmo://paycharge?txn=pay&recipients=${myVenmo}&amount=${totalContribution}&note=${vNote}`;
             
-            // 2. CRYPTO LINK (Global/Europe - Works with MetaMask, Coinbase, Trust)
-            // Uses standard Ethereum URI with @8453 (Base Network ID)
+            // 2. CRYPTO (Universal Deep Link)
+            // This format triggers the mobile "App Picker" menu
             const cryptoURI = `ethereum:${myWallet}@8453/transfer?address=${myWallet}&uint256=${totalContribution}e6`;
             
             document.getElementById('crypto-link').href = cryptoURI;
