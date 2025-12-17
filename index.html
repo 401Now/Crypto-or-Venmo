@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assisted Findom - outcastjaxton</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #0a0a0a; color: white; padding: 20px; }
+        h2 { letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; color: #fff; }
+        
+        #wheel-container { position: relative; width: 310px; height: 310px; margin: 20px auto; }
+        #canvas { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #222; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); box-shadow: 0 0 40px rgba(0,0,0,0.7); }
+        #pointer { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #ff4757; z-index: 10; }
+        
+        .stats { margin: 10px 0; padding: 15px; background: #151515; border-radius: 15px; border: 1px solid #222; display: inline-block; min-width: 240px; }
+        .total-label { color: #666; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+        .total-amount { font-size: 2.8rem; color: #2ed573; font-weight: bold; margin-top: 5px; }
+        
+        #spin-btn { background: #ffa502; color: #000; border: none; padding: 16px; font-size: 1rem; border-radius: 30px; cursor: pointer; font-weight: bold; width: 100%; max-width: 300px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(255,165,2,0.2); }
+        #spin-btn:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; }
+        
+        .pay-section { display: none; flex-direction: column; gap: 12px; align-items: center; margin-top: 15px; animation: slideUp 0.4s ease-out; }
+        .pay-btn { display: flex; align-items: center; justify-content: center; width: 100%; max-width: 280px; padding: 16px; border-radius: 35px; text-decoration: none; font-weight: bold; font-size: 1rem; color: white; transition: 0.2s; }
+        
+        .venmo-btn { background: #008CFF; } /* Venmo Blue */
+        .coinbase-btn { background: #2775ca; border: 1px solid #4a90e2; } /* Coinbase/USDC Blue */
+        
+        .copy-info { font-size: 0.7rem; color: #555; margin-top: 5px; cursor: pointer; text-decoration: underline; }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <h2>Assisted Findom</h2>
+    
+    <div class="stats">
+        <div class="total-label">Current Debt</div>
+        <div class="total-amount" id="display-amount">$0</div>
+    </div>
+
+    <div id="wheel-container">
+        <div id="pointer"></div>
+        <canvas id="canvas" width="400" height="400"></canvas>
+    </div>
+
+    <button id="spin-btn" onclick="spinWheel()">SPIN TO ADD AMOUNT</button>
+
+    <div id="pay-section" class="pay-section">
+        <a id="venmo-link" class="pay-btn venmo-btn" href="#">PAY VIA VENMO</a>
+        <a id="coinbase-link" class="pay-btn coinbase-btn" href="#">PAY VIA COINBASE (USDC)</a>
+        <div class="copy-info" onclick="copyAddress()">Copy USDC Address</div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const display = document.getElementById('display-amount');
+    const paySection = document.getElementById('pay-section');
+    const spinBtn = document.getElementById('spin-btn');
+
+    // --- USER CONFIG ---
+    const venmoUser = "outcastjaxton";
+    const usdcAddress = "0x7a890107E81851d17D8899E6784386d57EdcF141"; 
+    // -------------------
+
+    const prizes = [25, 50, 75, 100, 25, 50, 75, 100].sort(() => Math.random() - 0.5);
+    const colors = ['#1e90ff', '#2ed573', '#ff4757', '#ffa502', '#3742fa', '#70a1ff', '#7bed9f', '#ff6b81'];
+    let currentRotation = 0;
+    let totalContribution = 0;
+
+    function drawWheel() {
+        const segments = prizes.length;
+        const angle = (2 * Math.PI / segments);
+        for(let i=0; i<segments; i++) {
+            ctx.beginPath();
+            ctx.fillStyle = colors[i];
+            ctx.moveTo(200, 200);
+            ctx.arc(200, 200, 200, i * angle, (i + 1) * angle);
+            ctx.fill();
+            ctx.save();
+            ctx.translate(200, 200);
+            ctx.rotate(i * angle + angle / 2);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 28px Arial";
+            ctx.textAlign = "right";
+            ctx.fillText("$" + prizes[i], 175, 10);
+            ctx.restore();
+        }
+    }
+    drawWheel();
+
+    function spinWheel() {
+        spinBtn.disabled = true;
+        paySection.style.display = 'none';
+
+        const extraRotation = Math.floor(Math.random() * 360) + 2160; 
+        currentRotation += extraRotation;
+        canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+        setTimeout(() => {
+            const netRotation = currentRotation % 360;
+            const segmentAngle = 360 / prizes.length;
+            const prizeIndex = Math.floor((360 - netRotation + 270) % 360 / segmentAngle);
+            const landedAmount = prizes[prizeIndex];
+
+            totalContribution += landedAmount;
+            display.innerText = `$${totalContribution}`;
+
+            // VENMO LINK
+            const vNote = encodeURIComponent("small business support");
+            document.getElementById('venmo-link').href = `venmo://paycharge?txn=pay&recipients=${venmoUser}&amount=${totalContribution}&note=${vNote}`;
+            
+            // COINBASE/CRYPTO LINK (USDC on Base/ETH)
+            // Most wallets (Coinbase Wallet, MetaMask) respond to the 'ethereum:' prefix for USDC
+            document.getElementById('coinbase-link').href = `ethereum:${usdcAddress}?value=${totalContribution}&label=AssistedFindom`;
+            document.getElementById('coinbase-link').innerHTML = `PAY ${totalContribution} USDC`;
+
+            paySection.style.display = 'flex';
+            spinBtn.disabled = false;
+            spinBtn.innerText = "SPIN AGAIN TO ADD MORE";
+        }, 4000);
+    }
+
+    function copyAddress() {
+        navigator.clipboard.writeText(usdcAddress);
+        alert("USDC Address Copied!");
+    }
+</script>
+
+</body>
+</html>
